@@ -1,16 +1,45 @@
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FAQ_CONTENT } from '@/lib/content';
 
 /**
  * FAQ Component
  * Accordion-style frequently asked questions
  * Design: Minimal expandable items with smooth animations
+ * Optimized with Framer Motion for smooth expand/collapse
  */
 export default function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
+  };
+
   return (
-    <div
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-100px" }}
       style={{
         maxWidth: '1200px',
         margin: '0 auto',
@@ -19,16 +48,18 @@ export default function FAQ() {
       }}
     >
       {FAQ_CONTENT.map((item, index) => (
-        <div
+        <motion.div
           key={index}
+          variants={itemVariants}
           style={{
             borderBottom: '1px solid var(--border)',
             overflow: 'hidden',
           }}
         >
           {/* Question */}
-          <button
+          <motion.button
             onClick={() => setOpenIndex(openIndex === index ? null : index)}
+            whileHover={{ color: 'var(--cream2)' }}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -37,11 +68,13 @@ export default function FAQ() {
               cursor: 'pointer',
               gap: '16px',
               width: '100%',
-              transition: 'color 0.2s',
               color: 'var(--cream)',
+              background: 'transparent',
+              border: 'none',
+              fontFamily: 'inherit',
+              fontSize: 'inherit',
+              transition: 'color 0.3s ease',
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--cream2)')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--cream)')}
           >
             <h3
               style={{
@@ -50,45 +83,53 @@ export default function FAQ() {
                 fontWeight: '300',
                 color: 'inherit',
                 textAlign: 'left',
+                margin: 0,
               }}
             >
               {item.question}
             </h3>
-            <span
+            <motion.span
+              animate={{ rotate: openIndex === index ? 180 : 0 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
               style={{
                 fontSize: '18px',
                 color: 'var(--cream-muted)',
-                transition: 'transform 0.3s, color 0.2s',
                 flexShrink: 0,
-                transform: openIndex === index ? 'rotate(180deg)' : 'rotate(0deg)',
               }}
             >
               ↓
-            </span>
-          </button>
+            </motion.span>
+          </motion.button>
 
           {/* Answer */}
-          <div
-            style={{
-              maxHeight: openIndex === index ? '200px' : '0',
-              overflow: 'hidden',
-              transition: 'max-height 0.4s ease, padding 0.3s',
-              paddingBottom: openIndex === index ? '20px' : '0',
-            }}
-          >
-            <p
-              style={{
-                fontSize: '12px',
-                color: 'var(--cream-muted)',
-                lineHeight: '1.75',
-                maxWidth: '500px',
-              }}
-            >
-              {item.answer}
-            </p>
-          </div>
-        </div>
+          <AnimatePresence>
+            {openIndex === index && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                style={{
+                  overflow: 'hidden',
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: '12px',
+                    color: 'var(--cream-muted)',
+                    lineHeight: '1.75',
+                    maxWidth: '500px',
+                    paddingBottom: '20px',
+                    margin: 0,
+                  }}
+                >
+                  {item.answer}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 }

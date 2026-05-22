@@ -1,10 +1,12 @@
-import { useEffect, useRef } from 'react';
+import { useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { HERO_CONTENT } from '@/lib/content';
 
 /**
  * Hero Component
  * Premium full-width hero section with overlay and animated title
  * Design: Large serif title with metadata, gradient overlay
+ * Optimized with Framer Motion for smooth animations
  */
 export default function Hero() {
   const imgRef = useRef<HTMLImageElement>(null);
@@ -28,8 +30,37 @@ export default function Hero() {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
+  const titleVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.8,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
+  };
+
+  const metaVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.7,
+        ease: [0.16, 1, 0.3, 1],
+        delay: 0.3,
+      },
+    },
+  };
+
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.6 }}
       style={{
         maxWidth: '1200px',
         margin: '0 auto',
@@ -45,16 +76,18 @@ export default function Hero() {
         }}
       >
         {/* Background Image */}
-        <img
+        <motion.img
           ref={imgRef}
           src={HERO_CONTENT.imageUrl}
           alt={HERO_CONTENT.title}
+          initial={{ scale: 1 }}
+          whileHover={{ scale: 1.02 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           style={{
             position: 'absolute',
             inset: 0,
             width: '100%',
             height: '100%',
-            transition: 'transform 8s ease',
           }}
           className="hero-img"
         />
@@ -86,7 +119,11 @@ export default function Hero() {
           }}
         >
           {/* Title */}
-          <h1
+          <motion.h1
+            variants={titleVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
             style={{
               fontFamily: 'var(--font-display)',
               fontSize: 'clamp(60px, 14vw, 120px)',
@@ -95,22 +132,24 @@ export default function Hero() {
               lineHeight: '0.88',
               letterSpacing: '-0.02em',
               color: 'var(--cream)',
-              animation: 'titleIn 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both',
             }}
           >
             {HERO_CONTENT.title}
             <br />
             {HERO_CONTENT.subtitle}
-          </h1>
+          </motion.h1>
 
           {/* Meta */}
-          <div
+          <motion.div
+            variants={metaVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '16px',
               marginTop: '14px',
-              animation: 'titleIn 0.9s ease 0.6s both',
             }}
           >
             <span
@@ -133,26 +172,16 @@ export default function Hero() {
             >
               {HERO_CONTENT.description}
             </p>
-          </div>
+          </motion.div>
         </div>
       </div>
 
       <style>{`
-        @keyframes titleIn {
-          from {
-            opacity: 0;
-            transform: translateY(40px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
         .hero-img.zoomed {
           transform: scale(1.04);
+          transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
       `}</style>
-    </div>
+    </motion.div>
   );
 }

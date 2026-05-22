@@ -1,35 +1,42 @@
-import { useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { FEATURES_CONTENT } from '@/lib/content';
 
 /**
  * Features Component
  * Three-column grid showcasing gallery features
  * Design: Numbered items with images and descriptions
+ * Optimized with Framer Motion for smooth staggered animations
  */
 export default function Features() {
-  const refs = useRef<(HTMLDivElement | null)[]>([]);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('visible');
-          }
-        });
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.1,
       },
-      { threshold: 0.1 }
-    );
+    },
+  };
 
-    refs.current.forEach((ref) => {
-      if (ref) observer.observe(ref);
-    });
-
-    return () => observer.disconnect();
-  }, []);
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
+  };
 
   return (
-    <div
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-100px" }}
       style={{
         maxWidth: '1200px',
         margin: '0 auto',
@@ -40,17 +47,13 @@ export default function Features() {
       }}
     >
       {FEATURES_CONTENT.map((feature, index) => (
-        <div
+        <motion.div
           key={index}
-          ref={(el) => {
-            refs.current[index] = el;
-          }}
-          className="reveal"
+          variants={itemVariants}
           style={{
             display: 'flex',
             flexDirection: 'column',
             gap: '12px',
-            transitionDelay: `${index * 0.12}s`,
           }}
         >
           {/* Number */}
@@ -70,12 +73,15 @@ export default function Features() {
           </div>
 
           {/* Image */}
-          <div
+          <motion.div
+            whileHover={{ scale: 1.04 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
             style={{
               width: '100%',
               aspectRatio: '4/3',
               borderRadius: '3px',
               overflow: 'hidden',
+              cursor: 'pointer',
             }}
           >
             <img
@@ -84,12 +90,9 @@ export default function Features() {
               style={{
                 width: '100%',
                 height: '100%',
-                transition: 'transform 0.5s ease',
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.04)')}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
             />
-          </div>
+          </motion.div>
 
           {/* Title */}
           <h3
@@ -114,8 +117,8 @@ export default function Features() {
           >
             {feature.description}
           </p>
-        </div>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 }

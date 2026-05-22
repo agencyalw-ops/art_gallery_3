@@ -1,39 +1,46 @@
-import { useEffect, useRef, useState } from 'react';
-import { ARTWORKS_CONTENT, SITE_CONFIG } from '@/lib/content';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { ARTWORKS_CONTENT } from '@/lib/content';
 
 /**
  * Artworks Component
  * Masonry grid layout with search and filter functionality
  * Design: Variable-sized cards with hover effects
+ * Optimized with Framer Motion for smooth animations
  */
 export default function Artworks() {
-  const headerRef = useRef<HTMLDivElement>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
   const [displayCount, setDisplayCount] = useState(6);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (headerRef.current) {
-      observer.observe(headerRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, []);
 
   const filteredArtworks = ARTWORKS_CONTENT.artworks.filter((artwork) => {
     const matchesSearch = artwork.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = activeFilter === 'All' || artwork.category === activeFilter;
     return matchesSearch && matchesFilter;
   });
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
+  };
 
   return (
     <div
@@ -44,9 +51,11 @@ export default function Artworks() {
       }}
     >
       {/* Header */}
-      <div
-        ref={headerRef}
-        className="reveal"
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -64,10 +73,14 @@ export default function Artworks() {
         >
           {ARTWORKS_CONTENT.title}
         </h2>
-      </div>
+      </motion.div>
 
       {/* Search & Filter Bar */}
-      <div
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
         style={{
           display: 'flex',
           alignItems: 'center',
@@ -107,9 +120,11 @@ export default function Artworks() {
         {/* Filters */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }} className="hidden md:flex">
           {ARTWORKS_CONTENT.filters.map((filter) => (
-            <button
+            <motion.button
               key={filter}
               onClick={() => setActiveFilter(filter)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               style={{
                 fontSize: '9px',
                 letterSpacing: '0.1em',
@@ -118,29 +133,36 @@ export default function Artworks() {
                 padding: '4px 10px',
                 border: `1px solid ${activeFilter === filter ? 'var(--cream-muted)' : 'var(--border)'}`,
                 borderRadius: '20px',
-                transition: 'all 0.2s',
+                transition: 'all 0.3s ease',
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
+                background: 'transparent',
               }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = 'var(--cream-muted)';
-                e.currentTarget.style.color = 'var(--cream)';
+              onHoverStart={(e) => {
+                const el = e.currentTarget as HTMLElement;
+                el.style.borderColor = 'var(--cream-muted)';
+                el.style.color = 'var(--cream)';
               }}
-              onMouseLeave={(e) => {
+              onHoverEnd={(e) => {
+                const el = e.currentTarget as HTMLElement;
                 if (activeFilter !== filter) {
-                  e.currentTarget.style.borderColor = 'var(--border)';
-                  e.currentTarget.style.color = 'var(--cream-muted)';
+                  el.style.borderColor = 'var(--border)';
+                  el.style.color = 'var(--cream-muted)';
                 }
               }}
             >
               {filter}
-            </button>
+            </motion.button>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Masonry Grid */}
-      <div
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-100px" }}
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(4, 1fr)',
@@ -149,8 +171,9 @@ export default function Artworks() {
         className="md:grid-cols-4 sm:grid-cols-2"
       >
         {filteredArtworks.slice(0, displayCount).map((artwork, index) => (
-          <div
+          <motion.div
             key={artwork.id}
+            variants={itemVariants}
             style={{
               position: 'relative',
               borderRadius: '3px',
@@ -161,28 +184,24 @@ export default function Artworks() {
               gridRow: artwork.featured && index % 3 === 0 ? 'span 2' : 'span 1',
             }}
           >
-            <img
+            <motion.img
               src={artwork.imageUrl}
               alt={artwork.name}
+              whileHover={{ scale: 1.04, filter: 'brightness(0.95) saturate(1.05)' }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
               style={{
                 width: '100%',
                 height: '100%',
                 minHeight: '140px',
-                transition: 'transform 0.5s ease, filter 0.3s',
                 filter: 'brightness(0.88) saturate(0.95)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.04)';
-                e.currentTarget.style.filter = 'brightness(0.95) saturate(1.05)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.filter = 'brightness(0.88) saturate(0.95)';
               }}
             />
 
             {/* Hover Info */}
-            <div
+            <motion.div
+              initial={{ opacity: 0, y: 4 }}
+              whileHover={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
               style={{
                 position: 'absolute',
                 bottom: 0,
@@ -190,17 +209,6 @@ export default function Artworks() {
                 right: 0,
                 padding: '28px 10px 10px',
                 background: 'linear-gradient(transparent, rgba(18, 26, 20, 0.75))',
-                opacity: 0,
-                transform: 'translateY(4px)',
-                transition: 'opacity 0.3s, transform 0.3s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.opacity = '1';
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.opacity = '0';
-                e.currentTarget.style.transform = 'translateY(4px)';
               }}
             >
               <div
@@ -224,16 +232,24 @@ export default function Artworks() {
               >
                 {artwork.price}
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Load More */}
       {displayCount < filteredArtworks.length && (
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '28px' }}>
-          <button
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          style={{ display: 'flex', justifyContent: 'center', marginTop: '28px' }}
+        >
+          <motion.button
             onClick={() => setDisplayCount((prev) => prev + 3)}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             style={{
               fontSize: '10px',
               letterSpacing: '0.14em',
@@ -242,21 +258,24 @@ export default function Artworks() {
               border: '1px solid var(--border)',
               padding: '10px 32px',
               borderRadius: '2px',
-              transition: 'all 0.2s',
+              transition: 'all 0.3s ease',
               cursor: 'pointer',
+              background: 'transparent',
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--cream-muted)';
-              e.currentTarget.style.color = 'var(--cream)';
+            onHoverStart={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.borderColor = 'var(--cream-muted)';
+              el.style.color = 'var(--cream)';
             }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border)';
-              e.currentTarget.style.color = 'var(--cream-muted)';
+            onHoverEnd={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.borderColor = 'var(--border)';
+              el.style.color = 'var(--cream-muted)';
             }}
           >
             Load More
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       )}
     </div>
   );

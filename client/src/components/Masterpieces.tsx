@@ -1,44 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import { MASTERPIECES_CONTENT } from '@/lib/content';
 
 /**
  * Masterpieces Component
  * Two-column layout with featured image and navigation
  * Design: Large image on left, text and controls on right
+ * Optimized with Framer Motion for smooth animations
  */
 export default function Masterpieces() {
-  const imgRef = useRef<HTMLImageElement>(null);
-  const leftRef = useRef<HTMLDivElement>(null);
-  const rightRef = useRef<HTMLDivElement>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
-
-  useEffect(() => {
-    const observerLeft = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    const observerRight = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (leftRef.current) observerLeft.observe(leftRef.current);
-    if (rightRef.current) observerRight.observe(rightRef.current);
-
-    return () => {
-      observerLeft.disconnect();
-      observerRight.disconnect();
-    };
-  }, []);
 
   const handlePrev = () => {
     setCurrentSlide((prev) => (prev - 1 + 3) % 3);
@@ -48,8 +19,36 @@ export default function Masterpieces() {
     setCurrentSlide((prev) => (prev + 1) % 3);
   };
 
+  const leftVariants = {
+    hidden: { opacity: 0, x: -30 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        duration: 0.7,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
+  };
+
+  const rightVariants = {
+    hidden: { opacity: 0, x: 30 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        duration: 0.7,
+        ease: [0.16, 1, 0.3, 1],
+      },
+    },
+  };
+
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.6 }}
       style={{
         maxWidth: '1200px',
         margin: '0 auto',
@@ -61,9 +60,11 @@ export default function Masterpieces() {
       }}
     >
       {/* Left: Image */}
-      <div
-        ref={leftRef}
-        className="reveal-left"
+      <motion.div
+        variants={leftVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
         style={{
           position: 'relative',
           aspectRatio: '3/4',
@@ -71,17 +72,15 @@ export default function Masterpieces() {
           overflow: 'hidden',
         }}
       >
-        <img
-          ref={imgRef}
+        <motion.img
           src={MASTERPIECES_CONTENT.imageUrl}
           alt="Featured masterpiece"
+          whileHover={{ scale: 1.03 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
           style={{
             width: '100%',
             height: '100%',
-            transition: 'transform 0.6s ease',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.03)')}
-          onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
         />
         <div
           style={{
@@ -96,7 +95,12 @@ export default function Masterpieces() {
         >
           ↳ {MASTERPIECES_CONTENT.label}
         </div>
-        <div
+        <motion.div
+          key={currentSlide}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
           style={{
             position: 'absolute',
             bottom: '26px',
@@ -109,13 +113,15 @@ export default function Masterpieces() {
           }}
         >
           Masterpiece {currentSlide + 1}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* Right: Content */}
-      <div
-        ref={rightRef}
-        className="reveal-right"
+      <motion.div
+        variants={rightVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
       >
         <h3
           style={{
@@ -133,8 +139,10 @@ export default function Masterpieces() {
 
         {/* Navigation */}
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button
+          <motion.button
             onClick={handlePrev}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
             style={{
               width: '38px',
               height: '38px',
@@ -145,22 +153,27 @@ export default function Masterpieces() {
               justifyContent: 'center',
               fontSize: '14px',
               color: 'var(--cream-muted)',
-              transition: 'all 0.2s',
+              transition: 'all 0.3s ease',
               cursor: 'pointer',
+              background: 'transparent',
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--cream-muted)';
-              e.currentTarget.style.color = 'var(--cream)';
+            onHoverStart={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.borderColor = 'var(--cream-muted)';
+              el.style.color = 'var(--cream)';
             }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border)';
-              e.currentTarget.style.color = 'var(--cream-muted)';
+            onHoverEnd={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.borderColor = 'var(--border)';
+              el.style.color = 'var(--cream-muted)';
             }}
           >
             ←
-          </button>
-          <button
+          </motion.button>
+          <motion.button
             onClick={handleNext}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
             style={{
               width: '38px',
               height: '38px',
@@ -171,22 +184,25 @@ export default function Masterpieces() {
               justifyContent: 'center',
               fontSize: '14px',
               color: 'var(--cream-muted)',
-              transition: 'all 0.2s',
+              transition: 'all 0.3s ease',
               cursor: 'pointer',
+              background: 'transparent',
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--cream-muted)';
-              e.currentTarget.style.color = 'var(--cream)';
+            onHoverStart={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.borderColor = 'var(--cream-muted)';
+              el.style.color = 'var(--cream)';
             }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border)';
-              e.currentTarget.style.color = 'var(--cream-muted)';
+            onHoverEnd={(e) => {
+              const el = e.currentTarget as HTMLElement;
+              el.style.borderColor = 'var(--border)';
+              el.style.color = 'var(--cream-muted)';
             }}
           >
             →
-          </button>
+          </motion.button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
